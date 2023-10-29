@@ -1,9 +1,10 @@
 package net.envyvox.testmod.event;
 
 import net.envyvox.testmod.TestMod;
+import net.envyvox.testmod.networking.ModMessages;
+import net.envyvox.testmod.networking.packet.DrinkWaterC2SPacket;
 import net.envyvox.testmod.util.KeyBinding;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -17,7 +18,7 @@ public class ClientEvents {
         public static void onKeyInput(InputEvent.Key event) {
             if (KeyBinding.DRINKING_KEY.consumeClick()) {
                 assert Minecraft.getInstance().player != null;
-                Minecraft.getInstance().player.sendSystemMessage(Component.literal("Pressed a Key!"));
+                ModMessages.sendToServer(new DrinkWaterC2SPacket());
             }
         }
     }

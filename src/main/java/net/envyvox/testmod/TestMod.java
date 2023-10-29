@@ -3,6 +3,7 @@ package net.envyvox.testmod;
 import com.mojang.logging.LogUtils;
 import net.envyvox.testmod.block.ModBlocks;
 import net.envyvox.testmod.item.ModItems;
+import net.envyvox.testmod.networking.ModMessages;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -30,6 +31,9 @@ public class TestMod {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            ModMessages.register();
+        });
     }
 
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
