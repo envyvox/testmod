@@ -2,10 +2,14 @@ package net.envyvox.testmod;
 
 import com.mojang.logging.LogUtils;
 import net.envyvox.testmod.block.ModBlocks;
+import net.envyvox.testmod.block.entity.ModBlockEntities;
 import net.envyvox.testmod.fluid.ModFluidTypes;
 import net.envyvox.testmod.fluid.ModFluids;
 import net.envyvox.testmod.item.ModItems;
 import net.envyvox.testmod.networking.ModMessages;
+import net.envyvox.testmod.screen.GemInfusingStationScreen;
+import net.envyvox.testmod.screen.ModMenuTypes;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraftforge.common.MinecraftForge;
@@ -28,8 +32,12 @@ public class TestMod {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
+
         ModFluids.register(modEventBus);
         ModFluidTypes.register(modEventBus);
+
+        ModBlockEntities.register(modEventBus);
+        ModMenuTypes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 
@@ -48,6 +56,8 @@ public class TestMod {
         public static void onClientSetup(FMLClientSetupEvent event) {
             ItemBlockRenderTypes.setRenderLayer(ModFluids.SOURCE_SOAP_WATER.get(), RenderType.translucent());
             ItemBlockRenderTypes.setRenderLayer(ModFluids.FLOWING_SOAP_WATER.get(), RenderType.translucent());
+
+            MenuScreens.register(ModMenuTypes.GEM_INFUSING_STATION_MENU.get(), GemInfusingStationScreen::new);
         }
     }
 }
