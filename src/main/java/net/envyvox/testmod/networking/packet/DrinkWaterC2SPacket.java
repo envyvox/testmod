@@ -1,5 +1,6 @@
 package net.envyvox.testmod.networking.packet;
 
+import net.envyvox.testmod.networking.ModMessages;
 import net.envyvox.testmod.thirst.PlayerThirstProvider;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
@@ -45,12 +46,15 @@ public class DrinkWaterC2SPacket {
                     thirst.addThirst(1);
                     player.sendSystemMessage(Component.literal("Current Thirst " + thirst.getThirst())
                             .withStyle(ChatFormatting.AQUA));
+                    ModMessages.sendToPlayer(new ThirstDataSyncS2CPacket(thirst.getThirst()), player);
                 });
             } else {
                 player.sendSystemMessage(Component.translatable(MESSAGE_NO_WATER).withStyle(ChatFormatting.RED));
-                player.getCapability(PlayerThirstProvider.PLAYER_THIRST).ifPresent(thirst ->
-                        player.sendSystemMessage(Component.literal("Current Thirst " + thirst.getThirst())
-                                .withStyle(ChatFormatting.AQUA)));
+                player.getCapability(PlayerThirstProvider.PLAYER_THIRST).ifPresent(thirst -> {
+                    player.sendSystemMessage(Component.literal("Current Thirst " + thirst.getThirst())
+                            .withStyle(ChatFormatting.AQUA));
+                    ModMessages.sendToPlayer(new ThirstDataSyncS2CPacket(thirst.getThirst()), player);
+                });
             }
         });
         return true;
