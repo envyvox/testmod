@@ -102,7 +102,8 @@ public class GemInfusingStationBlock extends BaseEntityBlock {
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state,
+                                                                  @NotNull BlockEntityType<T> type) {
         return createTickerHelper(type, ModBlockEntities.GEM_INFUSING_STATION.get(), GemInfusingStationBlockEntity::tick);
     }
 }
