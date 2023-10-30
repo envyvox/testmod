@@ -7,6 +7,7 @@ import net.envyvox.testmod.fluid.ModFluidTypes;
 import net.envyvox.testmod.fluid.ModFluids;
 import net.envyvox.testmod.item.ModItems;
 import net.envyvox.testmod.networking.ModMessages;
+import net.envyvox.testmod.recipe.ModRecipes;
 import net.envyvox.testmod.screen.GemInfusingStationScreen;
 import net.envyvox.testmod.screen.ModMenuTypes;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -38,6 +39,7 @@ public class TestMod {
 
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
+        ModRecipes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 

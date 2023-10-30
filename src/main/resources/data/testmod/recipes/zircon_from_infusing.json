@@ -1,0 +1,11 @@
+{
+  "type": "testmod:gem_infusing",
+  "ingredients": [
+    {
+      "item": "testmod:raw_zircon"
+    }
+  ],
+  "output": {
+    "item": "testmod:zircon"
+  }
+}
