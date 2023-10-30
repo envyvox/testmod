@@ -10,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.SlotItemHandler;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,20 +18,22 @@ public class GemInfusingStationMenu extends AbstractContainerMenu {
     public final GemInfusingStationBlockEntity blockEntity;
     private final Level level;
     private final ContainerData data;
+    private FluidStack fluidStack;
 
-    public GemInfusingStationMenu(int id, Inventory inventory, FriendlyByteBuf extraData) {
-        this(id, inventory, inventory.player.level.getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(2));
+    public GemInfusingStationMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
+        this(id, inv, inv.player.level.getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(2));
     }
 
-    public GemInfusingStationMenu(int id, Inventory inventory, BlockEntity entity, ContainerData data) {
+    public GemInfusingStationMenu(int id, Inventory inv, BlockEntity entity, ContainerData data) {
         super(ModMenuTypes.GEM_INFUSING_STATION_MENU.get(), id);
-        checkContainerSize(inventory, 3);
+        checkContainerSize(inv, 3);
         blockEntity = (GemInfusingStationBlockEntity) entity;
-        this.level = inventory.player.level;
+        this.level = inv.player.level;
         this.data = data;
+        this.fluidStack = blockEntity.getFluidStack();
 
-        addPlayerInventory(inventory);
-        addPlayerHotbar(inventory);
+        addPlayerInventory(inv);
+        addPlayerHotbar(inv);
 
         this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
             this.addSlot(new SlotItemHandler(handler, 0, 12, 15));
@@ -45,13 +48,21 @@ public class GemInfusingStationMenu extends AbstractContainerMenu {
         return data.get(0) > 0;
     }
 
+    public void setFluid(FluidStack fluidStack) {
+        this.fluidStack = fluidStack;
+    }
+
+    public FluidStack getFluidStack() {
+        return fluidStack;
+    }
+
     public GemInfusingStationBlockEntity getBlockEntity() {
         return this.blockEntity;
     }
 
     public int getScaledProgress() {
         int progress = this.data.get(0);
-        int maxProgress = this.data.get(1);
+        int maxProgress = this.data.get(1);  // Max Progress
         int progressArrowSize = 26; // This is the height in pixels of your arrow
 
         return maxProgress != 0 && progress != 0 ? progress * progressArrowSize / maxProgress : 0;
@@ -110,7 +121,8 @@ public class GemInfusingStationMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(@NotNull Player player) {
-        return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()), player, ModBlocks.GEM_INFUSING_STATION.get());
+        return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()),
+                player, ModBlocks.GEM_INFUSING_STATION.get());
     }
 
     private void addPlayerInventory(Inventory playerInventory) {

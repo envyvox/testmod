@@ -5,6 +5,10 @@
       "item": "minecraft:stick"
     }
   ],
+  "fluid": {
+    "FluidName": "testmod:soap_water_fluid",
+    "Amount": 250
+  },
   "output": {
     "item": "minecraft:diamond"
   }

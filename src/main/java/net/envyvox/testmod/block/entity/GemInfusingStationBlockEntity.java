@@ -1,9 +1,11 @@
 package net.envyvox.testmod.block.entity;
 
 import net.envyvox.testmod.block.custom.GemInfusingStationBlock;
+import net.envyvox.testmod.fluid.ModFluids;
 import net.envyvox.testmod.item.ModItems;
 import net.envyvox.testmod.networking.ModMessages;
 import net.envyvox.testmod.networking.packet.EnergySyncS2CPacket;
+import net.envyvox.testmod.networking.packet.FluidSyncS2CPacket;
 import net.envyvox.testmod.recipe.GemInfusingStationRecipe;
 import net.envyvox.testmod.screen.GemInfusingStationMenu;
 import net.envyvox.testmod.util.ModEnergyStorage;
@@ -22,10 +24,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.templates.FluidTank;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
@@ -44,8 +50,8 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             return switch (slot) {
-                case 0 -> stack.getItem() == ModItems.ZIRCON.get();
-                case 1 -> stack.getItem() == ModItems.RAW_ZIRCON.get();
+                case 0 -> stack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).isPresent();
+                case 1 -> true;
                 case 2 -> false;
                 default -> super.isItemValid(slot, stack);
             };
@@ -62,8 +68,33 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
 
     private static final int ENERGY_REQ = 32;
 
+    private final FluidTank FLUID_TANK = new FluidTank(64000) {
+        @Override
+        protected void onContentsChanged() {
+            setChanged();
+            if (!level.isClientSide()) {
+                ModMessages.sendToClients(new FluidSyncS2CPacket(this.fluid, worldPosition));
+            }
+        }
+
+        @Override
+        public boolean isFluidValid(FluidStack stack) {
+            return stack.getFluid() == Fluids.WATER ||
+                    stack.getFluid() == ModFluids.SOURCE_SOAP_WATER.get();
+        }
+    };
+
+    public void setFluid(FluidStack stack) {
+        this.FLUID_TANK.setFluid(stack);
+    }
+
+    public FluidStack getFluidStack() {
+        return this.FLUID_TANK.getFluid();
+    }
+
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
     private LazyOptional<IEnergyStorage> lazyEnergyHandler = LazyOptional.empty();
+    private LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.empty();
     private final Map<Direction, LazyOptional<WrappedHandler>> directionWrappedHandlerMap = Map.of(
             Direction.DOWN, LazyOptional.of(() -> new WrappedHandler(itemHandler,
                     (i) -> i == 2,
@@ -120,6 +151,8 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int id, @NotNull Inventory inventory, @NotNull Player player) {
+        ModMessages.sendToClients(new EnergySyncS2CPacket(this.ENERGY_STORAGE.getEnergyStored(), worldPosition));
+        ModMessages.sendToClients(new FluidSyncS2CPacket(this.getFluidStack(), worldPosition));
         return new GemInfusingStationMenu(id, inventory, this, this.data);
     }
 
@@ -135,6 +168,10 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ENERGY) {
             return lazyEnergyHandler.cast();
+        }
+
+        if (cap == ForgeCapabilities.FLUID_HANDLER) {
+            return lazyFluidHandler.cast();
         }
 
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
@@ -166,6 +203,7 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         super.onLoad();
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
         lazyEnergyHandler = LazyOptional.of(() -> ENERGY_STORAGE);
+        lazyFluidHandler = LazyOptional.of(() -> FLUID_TANK);
     }
 
     @Override
@@ -173,6 +211,7 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         super.invalidateCaps();
         lazyItemHandler.invalidate();
         lazyEnergyHandler.invalidate();
+        lazyFluidHandler.invalidate();
     }
 
     @Override
@@ -180,6 +219,7 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         nbt.put("inventory", itemHandler.serializeNBT());
         nbt.putInt("gem_infusing_station.progress", this.progress);
         nbt.putInt("gem_infusing_station.energy", ENERGY_STORAGE.getEnergyStored());
+        nbt = FLUID_TANK.writeToNBT(nbt);
         super.saveAdditional(nbt);
     }
 
@@ -189,6 +229,7 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         itemHandler.deserializeNBT(nbt.getCompound("inventory"));
         progress = nbt.getInt("gem_infusing_station.progress");
         ENERGY_STORAGE.setEnergy(nbt.getInt("gem_infusing_station.energy"));
+        FLUID_TANK.readFromNBT(nbt);
     }
 
     public void drops() {
@@ -221,6 +262,33 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
             entity.resetProgress();
             setChanged(level, pos, state);
         }
+
+        if (hasFluidItemInSourceSlot(entity)) {
+            transferItemFluidToFluidTank(entity);
+        }
+    }
+
+    private static void transferItemFluidToFluidTank(GemInfusingStationBlockEntity pEntity) {
+        pEntity.itemHandler.getStackInSlot(0).getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(handler -> {
+            int drainAmount = Math.min(pEntity.FLUID_TANK.getSpace(), 1000);
+
+            FluidStack stack = handler.drain(drainAmount, IFluidHandler.FluidAction.SIMULATE);
+            if (pEntity.FLUID_TANK.isFluidValid(stack)) {
+                stack = handler.drain(drainAmount, IFluidHandler.FluidAction.EXECUTE);
+                fillTankWithFluid(pEntity, stack, handler.getContainer());
+            }
+        });
+    }
+
+    private static void fillTankWithFluid(GemInfusingStationBlockEntity pEntity, FluidStack stack, ItemStack container) {
+        pEntity.FLUID_TANK.fill(stack, IFluidHandler.FluidAction.EXECUTE);
+
+        pEntity.itemHandler.extractItem(0, 1, false);
+        pEntity.itemHandler.insertItem(0, container, false);
+    }
+
+    private static boolean hasFluidItemInSourceSlot(GemInfusingStationBlockEntity entity) {
+        return entity.itemHandler.getStackInSlot(0).getCount() > 0;
     }
 
     private static void extractEnergy(GemInfusingStationBlockEntity entity) {
@@ -250,6 +318,7 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
                 .getRecipeFor(GemInfusingStationRecipe.Type.INSTANCE, inventory, level);
 
         if (hasRecipe(entity)) {
+            entity.FLUID_TANK.drain(recipe.get().getFluid().getAmount(), IFluidHandler.FluidAction.EXECUTE);
             entity.itemHandler.extractItem(1, 1, false);
             entity.itemHandler.setStackInSlot(2, new ItemStack(recipe.get().getResultItem().getItem(),
                     entity.itemHandler.getStackInSlot(2).getCount() + 1));
@@ -269,7 +338,19 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
 
         return recipe.isPresent() &&
                 canInsertAmountIntoOutputSlot(inventory) &&
-                canInsertItemIntoOutputSlot(inventory, recipe.get().getResultItem());
+                canInsertItemIntoOutputSlot(inventory, recipe.get().getResultItem()) &&
+                hasCorrectFluidInTank(entity, recipe) &&
+                hasCorrectFluidAmountInTank(entity, recipe);
+    }
+
+    private static boolean hasCorrectFluidAmountInTank(GemInfusingStationBlockEntity entity,
+                                                       Optional<GemInfusingStationRecipe> recipe) {
+        return entity.FLUID_TANK.getFluidAmount() >= recipe.get().getFluid().getAmount();
+    }
+
+    private static boolean hasCorrectFluidInTank(GemInfusingStationBlockEntity entity,
+                                                 Optional<GemInfusingStationRecipe> recipe) {
+        return recipe.get().getFluid().equals(entity.FLUID_TANK.getFluid());
     }
 
     private static boolean canInsertItemIntoOutputSlot(SimpleContainer inventory, ItemStack itemStack) {

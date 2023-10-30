@@ -17,5 +17,7 @@
   "key.category.testmod.tutorial": "Test Mod Category",
   "key.category.testmod.drink_water": "Drink Water",
   "message.testmod.drink_water": "Drinking Water",
-  "message.testmod.no_water": "No Water nearby!"
+  "message.testmod.no_water": "No Water nearby!",
+  "testmod.tooltip.liquid.amount.with.capacity": "%s / %s mB",
+  "testmod.tooltip.liquid.amount": "%s mB"
 }
