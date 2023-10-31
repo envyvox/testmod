@@ -69,7 +69,8 @@ public class GemInfusingStationBlock extends BaseEntityBlock {
     }
 
     @Override
-    public void onRemove(BlockState state, @NotNull Level level, @NotNull BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, @NotNull Level level, @NotNull BlockPos pos, BlockState newState,
+                         boolean isMoving) {
         if (state.getBlock() != newState.getBlock()) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (blockEntity instanceof GemInfusingStationBlockEntity) {
@@ -104,6 +105,7 @@ public class GemInfusingStationBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(@NotNull Level level, @NotNull BlockState state,
                                                                   @NotNull BlockEntityType<T> type) {
-        return createTickerHelper(type, ModBlockEntities.GEM_INFUSING_STATION.get(), GemInfusingStationBlockEntity::tick);
+        return createTickerHelper(type, ModBlockEntities.GEM_INFUSING_STATION.get(),
+                GemInfusingStationBlockEntity::tick);
     }
 }

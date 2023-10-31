@@ -6,6 +6,7 @@ import net.envyvox.testmod.item.ModItems;
 import net.envyvox.testmod.networking.ModMessages;
 import net.envyvox.testmod.networking.packet.EnergySyncS2CPacket;
 import net.envyvox.testmod.networking.packet.FluidSyncS2CPacket;
+import net.envyvox.testmod.networking.packet.ItemStackSyncS2CPacket;
 import net.envyvox.testmod.recipe.GemInfusingStationRecipe;
 import net.envyvox.testmod.screen.GemInfusingStationMenu;
 import net.envyvox.testmod.util.ModEnergyStorage;
@@ -45,6 +46,9 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+            if (!level.isClientSide()) {
+                ModMessages.sendToClients(new ItemStackSyncS2CPacket(this, worldPosition));
+            }
         }
 
         @Override
@@ -92,9 +96,20 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         return this.FLUID_TANK.getFluid();
     }
 
+    public ItemStack getRenderStack() {
+        return itemHandler.getStackInSlot(itemHandler.getStackInSlot(2).isEmpty() ? 1 : 2);
+    }
+
+    public void setHandler(ItemStackHandler itemStackHandler) {
+        for (int i = 0; i < itemStackHandler.getSlots(); i++) {
+            itemHandler.setStackInSlot(i, itemStackHandler.getStackInSlot(i));
+        }
+    }
+
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
     private LazyOptional<IEnergyStorage> lazyEnergyHandler = LazyOptional.empty();
     private LazyOptional<IFluidHandler> lazyFluidHandler = LazyOptional.empty();
+
     private final Map<Direction, LazyOptional<WrappedHandler>> directionWrappedHandlerMap = Map.of(
             Direction.DOWN, LazyOptional.of(() -> new WrappedHandler(itemHandler,
                     (i) -> i == 2,
@@ -111,9 +126,9 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
             Direction.WEST, LazyOptional.of(() -> new WrappedHandler(itemHandler,
                     (index) -> index == 0 || index == 1,
                     (index, stack) -> itemHandler.isItemValid(0, stack) || itemHandler.isItemValid(1, stack))));
-
     protected final ContainerData data;
     private int progress = 0;
+
     private int maxProgress = 78;
 
     public GemInfusingStationBlockEntity(BlockPos pos, BlockState state) {
@@ -280,7 +295,8 @@ public class GemInfusingStationBlockEntity extends BlockEntity implements MenuPr
         });
     }
 
-    private static void fillTankWithFluid(GemInfusingStationBlockEntity pEntity, FluidStack stack, ItemStack container) {
+    private static void fillTankWithFluid(GemInfusingStationBlockEntity pEntity, FluidStack stack,
+                                          ItemStack container) {
         pEntity.FLUID_TANK.fill(stack, IFluidHandler.FluidAction.EXECUTE);
 
         pEntity.itemHandler.extractItem(0, 1, false);

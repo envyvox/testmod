@@ -1,12 +1,15 @@
 package net.envyvox.testmod.event;
 
 import net.envyvox.testmod.TestMod;
+import net.envyvox.testmod.block.entity.ModBlockEntities;
+import net.envyvox.testmod.block.entity.renderer.GemInfusingStationBlockRenderer;
 import net.envyvox.testmod.client.ThirstHudOverlay;
 import net.envyvox.testmod.networking.ModMessages;
 import net.envyvox.testmod.networking.packet.DrinkWaterC2SPacket;
 import net.envyvox.testmod.util.KeyBinding;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
@@ -36,6 +39,12 @@ public class ClientEvents {
         @SubscribeEvent
         public static void registerGuiOverlays(@NotNull RegisterGuiOverlaysEvent event) {
             event.registerAboveAll("thirst", ThirstHudOverlay.HUD_THIRST);
+        }
+
+        @SubscribeEvent
+        public static void registerRenderers(final EntityRenderersEvent.RegisterRenderers event) {
+            event.registerBlockEntityRenderer(ModBlockEntities.GEM_INFUSING_STATION.get(),
+                    GemInfusingStationBlockRenderer::new);
         }
     }
 }
