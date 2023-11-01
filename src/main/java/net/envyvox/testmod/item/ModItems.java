@@ -2,10 +2,12 @@ package net.envyvox.testmod.item;
 
 import net.envyvox.testmod.TestMod;
 import net.envyvox.testmod.block.ModBlocks;
+import net.envyvox.testmod.entity.ModEntityTypes;
 import net.envyvox.testmod.fluid.ModFluids;
 import net.envyvox.testmod.item.custom.EightBallItem;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
+import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -49,6 +51,12 @@ public class ModItems {
             () -> new SwordItem(Tiers.DIAMOND, 10, 5f,
                     new Item.Properties()
                             .stacksTo(1)
+                            .tab(ModCreativeModeTab.TEST_TAB)));
+
+    public static final RegistryObject<Item> CHOMPER_SPAWN_EGG = ITEMS.register("chomper_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntityTypes.CHOMPER, 0x22b341, 0x19732e,
+                    new Item.Properties()
+                            .stacksTo(64)
                             .tab(ModCreativeModeTab.TEST_TAB)));
 
     public static void register(IEventBus eventBus) {
