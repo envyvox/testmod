@@ -7,15 +7,18 @@ import net.envyvox.testmod.networking.ModMessages;
 import net.envyvox.testmod.networking.packet.ThirstDataSyncS2CPacket;
 import net.envyvox.testmod.thirst.PlayerThirst;
 import net.envyvox.testmod.thirst.PlayerThirstProvider;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -72,6 +75,14 @@ public class ModEvents {
                         ModMessages.sendToPlayer(new ThirstDataSyncS2CPacket(thirst.getThirst()), player);
                     });
                 }
+            }
+        }
+
+        @SubscribeEvent
+        public static void onLivingHurt(LivingHurtEvent event) {
+            if (event.getEntity() instanceof Sheep &&
+                    event.getSource().getEntity() instanceof Player player) {
+                player.sendSystemMessage(Component.literal(player.getName().getString() + "hurt a Sheep!"));
             }
         }
     }
