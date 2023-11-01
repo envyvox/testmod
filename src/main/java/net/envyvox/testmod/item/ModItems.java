@@ -59,6 +59,12 @@ public class ModItems {
                             .stacksTo(64)
                             .tab(ModCreativeModeTab.TEST_TAB)));
 
+    public static final RegistryObject<Item> ZIRCON_PICKAXE = ITEMS.register("zircon_pickaxe",
+            () -> new PickaxeItem(ModToolTiers.ZIRCON, 2, 3f,
+                    new Item.Properties()
+                            .stacksTo(1)
+                            .tab(ModCreativeModeTab.TEST_TAB)));
+
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
     }
