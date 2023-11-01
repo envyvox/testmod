@@ -21,5 +21,6 @@
   "message.testmod.drink_water": "Drinking Water",
   "message.testmod.no_water": "No Water nearby!",
   "testmod.tooltip.liquid.amount.with.capacity": "%s / %s mB",
-  "testmod.tooltip.liquid.amount": "%s mB"
+  "testmod.tooltip.liquid.amount": "%s mB",
+  "fluid_type.testmod.soap_water_fluid": "Soap Water"
 }
