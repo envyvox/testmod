@@ -12,6 +12,8 @@ import net.envyvox.testmod.networking.ModMessages;
 import net.envyvox.testmod.recipe.ModRecipes;
 import net.envyvox.testmod.screen.GemInfusingStationScreen;
 import net.envyvox.testmod.screen.ModMenuTypes;
+import net.envyvox.testmod.world.feature.ModConfiguredFeatures;
+import net.envyvox.testmod.world.feature.ModPlacedFeatures;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -37,10 +39,10 @@ public class TestMod {
 
         ModItems.register(modEventBus);
         ModBlocks.register(modEventBus);
-
         ModFluids.register(modEventBus);
         ModFluidTypes.register(modEventBus);
-
+        ModPlacedFeatures.register(modEventBus);
+        ModConfiguredFeatures.register(modEventBus);
         ModBlockEntities.register(modEventBus);
         ModMenuTypes.register(modEventBus);
         ModRecipes.register(modEventBus);
