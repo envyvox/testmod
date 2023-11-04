@@ -32,6 +32,11 @@ public class ModPlacedFeatures {
             () -> new PlacedFeature(ModConfiguredFeatures.RED_MAPLE_SPAWN.getHolder().get(),
                     VegetationPlacements.treePlacement(PlacementUtils.countExtra(3, 0.1f, 2))));
 
+    public static final RegistryObject<PlacedFeature> JASMINE_PLACED = PLACED_FEATURES.register("jasmine_placed",
+            () -> new PlacedFeature(ModConfiguredFeatures.JASMINE.getHolder().get(),
+                    List.of(RarityFilter.onAverageOnceEvery(16),
+                    InSquarePlacement.spread(), PlacementUtils.HEIGHTMAP, BiomeFilter.biome())));
+
     public static void register(IEventBus eventBus) {
         PLACED_FEATURES.register(eventBus);
     }
